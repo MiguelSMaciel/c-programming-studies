@@ -1,0 +1,255 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+struct no {
+    int dado;
+    struct no *prox;
+};
+
+struct no *lista = NULL;
+
+// Conta quantos elementos existem na lista circular
+int tamanhoLista() {
+    if (lista == NULL) {
+        return 0;
+    }
+
+    int cont = 0;
+    struct no *q = lista;
+
+    do {
+        cont++;
+        q = q->prox;
+    } while (q != lista);
+
+    return cont;
+}
+
+// Insere no inicio da lista circular
+void inserirEsq(int valor) {
+    struct no *p = malloc(sizeof(struct no));
+
+    if (p == NULL) {
+        printf("Erro ao alocar memoria.\n");
+        return;
+    }
+
+    p->dado = valor;
+
+    if (lista == NULL) {
+        lista = p;
+        p->prox = lista;
+    } else {
+        struct no *q = lista;
+
+        while (q->prox != lista) {
+            q = q->prox;
+        }
+
+        p->prox = lista;
+        q->prox = p;
+        lista = p;
+    }
+}
+
+// Insere no final da lista circular
+void inserirDir(int valor) {
+    struct no *p = malloc(sizeof(struct no));
+
+    if (p == NULL) {
+        printf("Erro ao alocar memoria.\n");
+        return;
+    }
+
+    p->dado = valor;
+
+    if (lista == NULL) {
+        lista = p;
+        p->prox = lista;
+    } else {
+        struct no *q = lista;
+
+        while (q->prox != lista) {
+            q = q->prox;
+        }
+
+        q->prox = p;
+        p->prox = lista;
+    }
+}
+
+// Insere em uma posicao especifica
+// Retorna 1 se conseguiu inserir
+// Retorna 0 se nao conseguiu inserir
+int inserirIntermediario(int valor, int pos) {
+    int tam = tamanhoLista();
+
+    // Para inserir, a posicao valida vai de 1 ate tamanho + 1
+    if (pos < 1 || pos > tam + 1) {
+        printf("Posicao invalida.\n");
+        return 0;
+    }
+
+    // Insercao no inicio
+    if (pos == 1) {
+        inserirEsq(valor);
+        return 1;
+    }
+
+    // Insercao no final
+    if (pos == tam + 1) {
+        inserirDir(valor);
+        return 1;
+    }
+
+    // Insercao realmente intermediaria
+    struct no *p = malloc(sizeof(struct no));
+
+    if (p == NULL) {
+        printf("Erro ao alocar memoria.\n");
+        return 0;
+    }
+
+    p->dado = valor;
+
+    struct no *q = lista;
+
+    // q precisa parar no no anterior a posicao desejada
+    for (int i = 1; i < pos - 1; i++) {
+        q = q->prox;
+    }
+
+    p->prox = q->prox;
+    q->prox = p;
+
+    return 1;
+}
+
+// Remove um elemento de uma posicao especifica
+void removerIntermediario(int pos) {
+    int tam = tamanhoLista();
+
+    if (lista == NULL) {
+        printf("Lista vazia.\n");
+        return;
+    }
+
+    // Para remover, a posicao valida vai de 1 ate tamanho
+    if (pos < 1 || pos > tam) {
+        printf("Posicao invalida.\n");
+        return;
+    }
+
+    struct no *remover;
+
+    // Remocao do primeiro no
+    if (pos == 1) {
+        remover = lista;
+
+        // Caso tenha apenas um elemento
+        if (lista->prox == lista) {
+            lista = NULL;
+            free(remover);
+            return;
+        }
+
+        struct no *q = lista;
+
+        // q vai ate o ultimo no
+        while (q->prox != lista) {
+            q = q->prox;
+        }
+
+        lista = lista->prox;
+        q->prox = lista;
+        free(remover);
+        return;
+    }
+
+    // Remocao intermediaria ou no final
+    struct no *q = lista;
+
+    // q precisa parar no no anterior ao que sera removido
+    for (int i = 1; i < pos - 1; i++) {
+        q = q->prox;
+    }
+
+    remover = q->prox;
+    q->prox = remover->prox;
+    free(remover);
+}
+
+// Mostra a lista circular
+void mostrarLista() {
+    if (lista == NULL) {
+        printf("Lista vazia.\n");
+        return;
+    }
+
+    struct no *q = lista;
+
+    printf("Lista circular: ");
+
+    do {
+        printf("%d -> ", q->dado);
+        q = q->prox;
+    } while (q != lista);
+
+    printf("(volta para o inicio)\n");
+}
+
+// Libera todos os nos da lista antes de encerrar o programa
+void liberarLista() {
+    if (lista == NULL) {
+        return;
+    }
+
+    struct no *q = lista->prox;
+
+    while (q != lista) {
+        struct no *aux = q;
+        q = q->prox;
+        free(aux);
+    }
+
+    free(lista);
+    lista = NULL;
+}
+
+int main() {
+    int valor, pos;
+    int i = 1;
+
+    printf("Inserindo 10 elementos na lista circular:\n\n");
+
+    while (i <= 10) {
+        printf("Digite o %d valor: ", i);
+        scanf("%d", &valor);
+
+        printf("Digite a posicao para inserir: ");
+        scanf("%d", &pos);
+
+        if (inserirIntermediario(valor, pos)) {
+            mostrarLista();
+            i++;
+        } else {
+            printf("Tente inserir o valor %d novamente.\n", i);
+            mostrarLista();
+        }
+
+        printf("\n");
+    }
+
+    printf("\nAgora vamos remover um elemento.\n");
+    printf("Digite a posicao que deseja remover: ");
+    scanf("%d", &pos);
+
+    removerIntermediario(pos);
+
+    printf("\nLista depois da remocao:\n");
+    mostrarLista();
+
+    liberarLista();
+
+    return 0;
+}
